@@ -12,7 +12,7 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void ConfigureAppConfigurationConfiguresValues()
 		{
-			var host = new AppHostBuilder()
+			var services = MauiAppBuilder.CreateBuilder()
 				.ConfigureAppConfiguration((_, builder) =>
 				{
 					builder.AddInMemoryCollection(new Dictionary<string, string>
@@ -22,7 +22,7 @@ namespace Microsoft.Maui.UnitTests.Hosting
 				})
 				.Build();
 
-			var configuration = host.Services.GetRequiredService<IConfiguration>();
+			var configuration = services.GetRequiredService<IConfiguration>();
 
 			Assert.Equal("value 1", configuration["key 1"]);
 		}
@@ -30,7 +30,7 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void ConfigureAppConfigurationOverwritesValues()
 		{
-			var host = new AppHostBuilder()
+			var services = MauiAppBuilder.CreateBuilder()
 				.ConfigureAppConfiguration((_, builder) =>
 				{
 					builder.AddInMemoryCollection(new Dictionary<string, string>
@@ -48,7 +48,7 @@ namespace Microsoft.Maui.UnitTests.Hosting
 				})
 				.Build();
 
-			var configuration = host.Services.GetRequiredService<IConfiguration>();
+			var configuration = services.GetRequiredService<IConfiguration>();
 
 			Assert.Equal("value a", configuration["key 1"]);
 			Assert.Equal("value 2", configuration["key 2"]);
@@ -59,21 +59,26 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		{
 			string value = null;
 
-			var host = new AppHostBuilder()
+			var appBuilder = MauiAppBuilder.CreateBuilder()
 				.ConfigureAppConfiguration((_, builder) =>
 				{
 					builder.AddInMemoryCollection(new Dictionary<string, string>
 					{
 						{ "key 1", "value 1" },
 					});
-				})
-				.ConfigureServices((context, services) =>
-				{
-					value = context.Configuration["key 1"];
-				})
-				.Build();
+				});
+
+			// TODO: Need appBuilder.Host.ConfigureService(...);
+
+			//appBuilder.
+			//	.ConfigureServices((context, services) =>
+			//	{
+			//		value = context.Configuration["key 1"];
+			//	});
+			var services = appBuilder.Build();
 
 			Assert.Equal("value 1", value);
+			throw new System.Exception("TODO: Not implemented yet");
 		}
 	}
 }

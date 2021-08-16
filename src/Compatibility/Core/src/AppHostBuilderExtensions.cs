@@ -50,7 +50,13 @@ namespace Microsoft.Maui.Controls.Hosting
 			return builder;
 		}
 
-
+		public static MauiAppBuilder UseMauiApp<TApp>(this MauiAppBuilder builder, Func<IServiceProvider, TApp> implementationFactory)
+			where TApp : class, IApplication
+		{
+			builder.Services.AddSingleton<IApplication>(implementationFactory);
+			builder.SetupDefaults();
+			return builder;
+		}
 
 		static MauiAppBuilder SetupDefaults(this MauiAppBuilder builder)
 		{

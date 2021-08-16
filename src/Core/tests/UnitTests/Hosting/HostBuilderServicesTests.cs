@@ -13,49 +13,42 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void CanGetServices()
 		{
-			var host = new AppHostBuilder()
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			var services = appBuilder.Build();
 
-			Assert.NotNull(host);
-			Assert.NotNull(host.Services);
+			Assert.NotNull(services);
 		}
 
 		[Fact]
 		public void GetServiceThrowsWhenConstructorParamTypesWereNotRegistered()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) => services.AddTransient<IFooBarService, FooBarService>())
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooBarService, FooBarService>();
+			var services = appBuilder.Build();
 
-			Assert.Throws<InvalidOperationException>(() => host.Services.GetService<IFooBarService>());
+			Assert.Throws<InvalidOperationException>(() => services.GetService<IFooBarService>());
 		}
 
 		[Fact]
 		public void GetServiceThrowsWhenNoPublicConstructors()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) => services.AddTransient<IFooService, BadFooService>())
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, BadFooService>();
+			var services = appBuilder.Build();
 
-			var ex = Assert.Throws<InvalidOperationException>(() => host.Services.GetService<IFooService>());
-			Assert.Contains("public or internal constructors", ex.Message);
+			var ex = Assert.Throws<InvalidOperationException>(() => services.GetService<IFooService>());
+			Assert.Contains("suitable constructor", ex.Message);
 		}
 
 		[Fact]
 		public void GetServiceHandlesFirstOfMultipleConstructors()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooService, FooService>();
-					services.AddTransient<IFooBarService, FooDualConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooDualConstructor>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var foobar = Assert.IsType<FooDualConstructor>(service);
 			Assert.IsType<FooService>(foobar.Foo);
@@ -64,16 +57,12 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceHandlesSecondOfMultipleConstructors()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IBarService, BarService>();
-					services.AddTransient<IFooBarService, FooDualConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IBarService, BarService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooDualConstructor>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var foobar = Assert.IsType<FooDualConstructor>(service);
 			Assert.IsType<BarService>(foobar.Bar);
@@ -82,15 +71,11 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceHandlesUsesCorrectCtor_DefaultWithNothing()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooBarService, FooTrioConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooBarService, FooTrioConstructor>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var trio = Assert.IsType<FooTrioConstructor>(service);
 			Assert.Null(trio.Foo);
@@ -102,16 +87,12 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceHandlesUsesCorrectCtor_DefaultWithBar()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IBarService, BarService>();
-					services.AddTransient<IFooBarService, FooTrioConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IBarService, BarService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooTrioConstructor>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var trio = Assert.IsType<FooTrioConstructor>(service);
 			Assert.Null(trio.Foo);
@@ -123,16 +104,12 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceHandlesUsesCorrectCtor_Foo()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooService, FooService>();
-					services.AddTransient<IFooBarService, FooTrioConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooTrioConstructor>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var trio = Assert.IsType<FooTrioConstructor>(service);
 			Assert.IsType<FooService>(trio.Foo);
@@ -144,17 +121,13 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceHandlesUsesCorrectCtor_FooWithCat()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooService, FooService>();
-					services.AddTransient<ICatService, CatService>();
-					services.AddTransient<IFooBarService, FooTrioConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			appBuilder.Services.AddTransient<ICatService, CatService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooTrioConstructor>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var trio = Assert.IsType<FooTrioConstructor>(service);
 			Assert.IsType<FooService>(trio.Foo);
@@ -166,17 +139,13 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceHandlesUsesCorrectCtor_FooBar()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooService, FooService>();
-					services.AddTransient<IBarService, BarService>();
-					services.AddTransient<IFooBarService, FooTrioConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			appBuilder.Services.AddTransient<IBarService, BarService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooTrioConstructor>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var trio = Assert.IsType<FooTrioConstructor>(service);
 			Assert.IsType<FooService>(trio.Foo);
@@ -188,18 +157,14 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceHandlesUsesCorrectCtor_FooBarCat()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooService, FooService>();
-					services.AddTransient<IBarService, BarService>();
-					services.AddTransient<ICatService, CatService>();
-					services.AddTransient<IFooBarService, FooTrioConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			appBuilder.Services.AddTransient<IBarService, BarService>();
+			appBuilder.Services.AddTransient<ICatService, CatService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooTrioConstructor>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var trio = Assert.IsType<FooTrioConstructor>(service);
 			Assert.IsType<FooService>(trio.Foo);
@@ -211,17 +176,13 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceCanReturnTypesThatHaveConstructorParams()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooService, FooService>();
-					services.AddTransient<IBarService, BarService>();
-					services.AddTransient<IFooBarService, FooBarService>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			appBuilder.Services.AddTransient<IBarService, BarService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooBarService>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 
 			var foobar = Assert.IsType<FooBarService>(service);
 			Assert.IsType<FooService>(foobar.Foo);
@@ -231,15 +192,11 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceCanReturnTypesThatHaveUnregisteredConstructorParamsButHaveDefaultValues()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooBarService, FooDefaultValueConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooBarService, FooDefaultValueConstructor>();
+			var services = appBuilder.Build();
 
-			var foo = host.Services.GetService<IFooBarService>();
+			var foo = services.GetService<IFooBarService>();
 
 			Assert.NotNull(foo);
 
@@ -251,16 +208,12 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceCanReturnTypesThatHaveRegisteredConstructorParamsAndHaveDefaultValues()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IBarService, BarService>();
-					services.AddTransient<IFooBarService, FooDefaultValueConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IBarService, BarService>();
+			appBuilder.Services.AddTransient<IFooBarService, FooDefaultValueConstructor>();
+			var services = appBuilder.Build();
 
-			var foo = host.Services.GetService<IFooBarService>();
+			var foo = services.GetService<IFooBarService>();
 
 			Assert.NotNull(foo);
 
@@ -273,15 +226,11 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceCanReturnTypesThatHaveSystemDefaultValues()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooBarService, FooDefaultSystemValueConstructor>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooBarService, FooDefaultSystemValueConstructor>();
+			var services = appBuilder.Build();
 
-			var foo = host.Services.GetService<IFooBarService>();
+			var foo = services.GetService<IFooBarService>();
 
 			Assert.NotNull(foo);
 
@@ -293,17 +242,13 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void GetServiceCanReturnEnumerableParams()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooService, FooService>();
-					services.AddTransient<IFooService, FooService2>();
-					services.AddTransient<IFooBarService, FooEnumerableService>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			appBuilder.Services.AddTransient<IFooService, FooService2>();
+			appBuilder.Services.AddTransient<IFooBarService, FooEnumerableService>();
+			var services = appBuilder.Build();
 
-			var service = host.Services.GetService<IFooBarService>();
+			var service = services.GetService<IFooBarService>();
 			var foobar = Assert.IsType<FooEnumerableService>(service);
 
 			var serviceTypes = foobar.Foos
@@ -316,75 +261,63 @@ namespace Microsoft.Maui.UnitTests.Hosting
 		[Fact]
 		public void WillRetrieveDifferentTransientServices()
 		{
-			var host = new AppHostBuilder()
-				.ConfigureServices((ctx, services) => services.AddTransient<IFooService, FooService>())
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			var services = appBuilder.Build();
 
-			AssertTransient<IFooService, FooService>(host.Services);
+			AssertTransient<IFooService, FooService>(services);
 		}
 
 		[Fact]
 		public void WillRetrieveSameSingletonServices()
 		{
-			var host = new AppHostBuilder()
-				.ConfigureServices((ctx, services) => services.AddSingleton<IFooService, FooService>())
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddSingleton<IFooService, FooService>();
+			var services = appBuilder.Build();
 
-			AssertSingleton<IFooService, FooService>(host.Services);
+			AssertSingleton<IFooService, FooService>(services);
 		}
 
 		[Fact]
 		public void WillRetrieveMixedServices()
 		{
-			var host = new AppHostBuilder()
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddSingleton<IFooService, FooService>();
-					services.AddTransient<IBarService, BarService>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddSingleton<IFooService, FooService>();
+			appBuilder.Services.AddTransient<IBarService, BarService>();
+			var services = appBuilder.Build();
 
-			AssertSingleton<IFooService, FooService>(host.Services);
-			AssertTransient<IBarService, BarService>(host.Services);
+			AssertSingleton<IFooService, FooService>(services);
+			AssertTransient<IBarService, BarService>(services);
 		}
 
 		[Fact]
 		public void WillRetrieveEnumerables()
 		{
-			var host = new AppHostBuilder()
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddTransient<IFooService, FooService>();
-					services.AddTransient<IFooService, FooService2>();
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddTransient<IFooService, FooService>();
+			appBuilder.Services.AddTransient<IFooService, FooService2>();
+			var services = appBuilder.Build();
 
-			var services = host.Services
+			var fooServices = services
 				.GetServices<IFooService>()
 				.ToArray();
-			Assert.Equal(2, services.Length);
+			Assert.Equal(2, fooServices.Length);
 
-			var serviceTypes = services
+			var serviceTypes = fooServices
 				.Select(s => s.GetType().FullName)
 				.ToArray();
 			Assert.Contains(typeof(FooService).FullName, serviceTypes);
 			Assert.Contains(typeof(FooService2).FullName, serviceTypes);
 		}
 
-		[Theory]
-		//[InlineData(true)] // TODO: The MAUI provider does not support generic args
-		[InlineData(false)]
-		public void CanCreateLogger(bool ctorInjection)
+		[Fact]
+		public void CanCreateLogger()
 		{
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(ctorInjection)
-				.ConfigureServices((ctx, services) =>
-				{
-					services.AddLogging(logging => logging.AddConsole());
-				})
-				.Build();
+			var appBuilder = MauiAppBuilder.CreateBuilder();
+			appBuilder.Services.AddLogging(logging => logging.AddConsole());
+			var services = appBuilder.Build();
 
-			var factory = host.Services.GetRequiredService<ILoggerFactory>();
+			var factory = services.GetRequiredService<ILoggerFactory>();
 
 			var logger = factory.CreateLogger<HostBuilderServicesTests>();
 
