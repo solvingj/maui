@@ -34,7 +34,7 @@ namespace Microsoft.Maui
 			//	.ConfigureUsing(startup)
 			//	.Build();
 
-			var services = builder.FinalizeInternals();
+			var services = builder.Build();
 
 			Services = services;
 
