@@ -27,13 +27,9 @@ namespace Microsoft.Maui.UnitTests.ImageSource
 
 		private IImageSourceServiceProvider CreateImageSourceServiceProvider(Action<IImageSourceServiceCollection> configure)
 		{
-
-			var host = new AppHostBuilder()
-				.UseMauiServiceProviderFactory(true)
+			var services = MauiAppBuilder.CreateBuilder()
 				.ConfigureImageSources(configure)
 				.Build();
-
-			var services = host.Services;
 
 			var provider = services.GetRequiredService<IImageSourceServiceProvider>();
 
